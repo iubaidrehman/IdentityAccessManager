@@ -1,0 +1,107 @@
+version: '3.8'
+
+services:
+  # SQL Server
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - iam-network
+
+  # Seq for logging
+  seq:
+    image: datalust/seq:latest
+    ports:
+      - "5341:80"
+      - "5342:5341"
+    environment:
+      - ACCEPT_EULA=Y
+    volumes:
+      - seq_data:/data
+    networks:
+      - iam-network
+
+  # Identity Service
+  identity:
+    build:
+      context: ../backend
+      dockerfile: src/IdentityAccessManager.Identity/Dockerfile
+    ports:
+      - "5001:80"
+      - "5001:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=IdentityAccessManager_Identity;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;MultipleActiveResultSets=true
+    depends_on:
+      - sqlserver
+    networks:
+      - iam-network
+
+  # Users Service
+  users:
+    build:
+      context: ../backend
+      dockerfile: src/IdentityAccessManager.Users/Dockerfile
+    ports:
+      - "5002:80"
+      - "5002:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Server=sqlserver;Database=IdentityAccessManager_Users;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=true;MultipleActiveResultSets=true
+      - Jwt__Authority=https://identity:80
+      - Jwt__Audience=api1
+      - Jwt__Issuer=https://identity:80
+    depends_on:
+      - sqlserver
+      - identity
+    networks:
+      - iam-network
+
+  # API Gateway
+  gateway:
+    build:
+      context: ../backend
+      dockerfile: src/IdentityAccessManager.Gateway/Dockerfile
+    ports:
+      - "5000:80"
+      - "5000:443"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__Authority=https://identity:80
+      - Jwt__Audience=api1
+      - Jwt__Issuer=https://identity:80
+    depends_on:
+      - identity
+      - users
+    networks:
+      - iam-network
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=https://gateway:80
+      - NEXT_PUBLIC_AUTH_URL=https://identity:80
+    depends_on:
+      - gateway
+    networks:
+      - iam-network
+
+volumes:
+  sqlserver_data:
+  seq_data:
+
+networks:
+  iam-network:
+    driver: bridge 
