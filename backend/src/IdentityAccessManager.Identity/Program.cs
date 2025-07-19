@@ -1,6 +1,8 @@
 using Duende.IdentityServer;
+using IdentityAccessManager.Identity;
 using IdentityAccessManager.Identity.Data;
 using IdentityAccessManager.Identity.Models;
+using IdentityAccessManager.Identity.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;

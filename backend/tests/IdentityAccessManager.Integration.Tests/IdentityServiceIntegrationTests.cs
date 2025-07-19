@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Testcontainers.MsSql;
+using Xunit;
 
 namespace IdentityAccessManager.Integration.Tests;
 

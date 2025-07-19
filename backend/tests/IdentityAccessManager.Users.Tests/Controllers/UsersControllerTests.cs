@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Security.Claims;
+using Xunit;
 
 namespace IdentityAccessManager.Users.Tests.Controllers;
 

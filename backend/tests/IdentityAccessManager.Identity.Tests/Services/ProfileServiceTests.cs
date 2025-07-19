@@ -6,6 +6,7 @@ using IdentityAccessManager.Identity.Services;
 using Microsoft.AspNetCore.Identity;
 using Moq;
 using System.Security.Claims;
+using Xunit;
 
 namespace IdentityAccessManager.Identity.Tests.Services;
 
@@ -113,10 +114,12 @@ public class ProfileServiceTests
             new Claim("sub", user.Id)
         };
 
-        var context = new IsActiveContext
-        {
-            Subject = new ClaimsPrincipal(new ClaimsIdentity(claims))
-        };
+        var context = new IsActiveContext(
+            new ClaimsPrincipal(new ClaimsIdentity(claims)),
+            new Client(),
+            "unit_test"
+        );
+
 
         _userManagerMock.Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
             .ReturnsAsync(user);
@@ -143,10 +146,12 @@ public class ProfileServiceTests
             new Claim("sub", user.Id)
         };
 
-        var context = new IsActiveContext
-        {
-            Subject = new ClaimsPrincipal(new ClaimsIdentity(claims))
-        };
+        var context = new IsActiveContext(
+            new ClaimsPrincipal(new ClaimsIdentity(claims)),
+            new Client(),
+            "unit_test"
+        );
+
 
         _userManagerMock.Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
             .ReturnsAsync(user);
@@ -167,10 +172,12 @@ public class ProfileServiceTests
             new Claim("sub", "test-user-id")
         };
 
-        var context = new IsActiveContext
-        {
-            Subject = new ClaimsPrincipal(new ClaimsIdentity(claims))
-        };
+        var context = new IsActiveContext(
+            new ClaimsPrincipal(new ClaimsIdentity(claims)),
+            new Client(),
+            "unit_test"
+        );
+
 
         _userManagerMock.Setup(x => x.GetUserAsync(It.IsAny<ClaimsPrincipal>()))
             .ReturnsAsync((ApplicationUser?)null);
