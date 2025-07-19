@@ -15,8 +15,9 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 
 // YARP Reverse Proxy
+var configSection = builder.Configuration.GetSection("ReverseProxy");
 builder.Services.AddReverseProxy()
-    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+    .LoadFromConfig(configSection);
 
 // JWT Authentication for token validation
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -28,7 +29,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Authorization
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AuthenticatedUser", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+    });
+});
+
 
 // CORS
 builder.Services.AddCors(options =>
