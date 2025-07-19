@@ -12,7 +12,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Add services to the container
-builder.Services.AddControllers();
+// Note: Gateway is a reverse proxy, no controllers needed
 
 // YARP Reverse Proxy
 var configSection = builder.Configuration.GetSection("ReverseProxy");
@@ -69,7 +69,7 @@ app.UseCors("default");
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllers();
+// Gateway routes are handled by MapReverseProxy(), no need for MapControllers()
 app.MapReverseProxy();
 
 app.Run(); 

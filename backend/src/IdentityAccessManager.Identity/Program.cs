@@ -17,7 +17,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 // Add services to the container
-builder.Services.AddControllers();
+// Note: Identity Server doesn't need controllers for OAuth/OpenID Connect endpoints
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -37,6 +37,16 @@ builder.Services.AddIdentityServer(options =>
     options.Events.RaiseSuccessEvents = true;
 
     options.EmitStaticAudienceClaim = true;
+    
+    // Ensure discovery endpoints are exposed
+    options.Discovery.ShowEndpoints = true;
+    options.Discovery.ShowKeySet = true;
+    options.Discovery.ShowIdentityScopes = true;
+    options.Discovery.ShowApiScopes = true;
+    options.Discovery.ShowClaims = true;
+    
+    // Set the issuer URI
+    options.IssuerUri = "https://localhost:51181";
 })
     .AddInMemoryIdentityResources(Config.IdentityResources)
     .AddInMemoryApiScopes(Config.ApiScopes)
@@ -86,10 +96,28 @@ app.UseHttpsRedirection();
 
 app.UseCors("default");
 
+// Add some debugging middleware to see what requests are coming in
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"Request: {context.Request.Method} {context.Request.Path}");
+    await next();
+});
+
+// Add debugging for Identity Server
+app.Use(async (context, next) =>
+{
+    Console.WriteLine($"Before IdentityServer: {context.Request.Method} {context.Request.Path}");
+    await next();
+    Console.WriteLine($"After IdentityServer: {context.Response.StatusCode}");
+});
+
 app.UseIdentityServer();
 app.UseAuthorization();
 
-app.MapControllers();
+// Add a basic health check endpoint
+app.MapGet("/health", () => "Identity Server is running!");
+
+// Note: Identity Server endpoints are handled by UseIdentityServer(), no need for MapControllers()
 
 // Seed database
 using (var scope = app.Services.CreateScope())
